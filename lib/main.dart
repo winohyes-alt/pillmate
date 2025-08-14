@@ -29,7 +29,7 @@ class PillMateApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF6FBFC),
         snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
       ),
-      home: const HomePage(),
+      home: const SplashPage(),
     );
   }
 }
@@ -69,6 +69,37 @@ class Medicine {
         enabled: j['enabled'] ?? true,
         days: (j['days'] as List?)?.map((e) => e as int).toList() ?? [1,2,3,4,5,6,7],
       );
+}
+
+
+class SplashPage extends StatefulWidget {
+  const SplashPage({super.key});
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF4AC3CF),
+      body: Center(
+        child: Image.asset('assets/logo.png', width: 150, height: 150),
+      ),
+    );
+  }
 }
 
 class HomePage extends StatefulWidget {
