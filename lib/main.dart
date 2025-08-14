@@ -12,8 +12,7 @@ import 'package:android_intent_plus/flag.dart' as flags;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await NotificationService.instance.init();
-  runApp(const PillMateApp());
+    runApp(const PillMateApp());
 }
 
 class PillMateApp extends StatelessWidget {
@@ -82,6 +81,14 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
+    () async {
+      await NotificationService.instance.init();
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    }();
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -115,6 +122,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    () async {
+      await NotificationService.instance.init();
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    }();
     _loadMeds().then((_) => _ensureSchedules());
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshPaused());
   }
@@ -458,6 +473,14 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
   @override
   void initState() {
     super.initState();
+    () async {
+      await NotificationService.instance.init();
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    }();
     _nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
     if (widget.existing != null) {
       _selectedTime = widget.existing!.time;
@@ -546,6 +569,14 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    () async {
+      await NotificationService.instance.init();
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    }();
     _load();
   }
 
