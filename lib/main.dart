@@ -84,7 +84,6 @@ appBar: AppBar(
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ===== Banner ด้านบน =====
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
           child: Container(
@@ -98,7 +97,6 @@ appBar: AppBar(
             child: const Text('แบนเนอร์', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ),
-        // ===== แถบปฏิทิน 7 วันเดิม =====
         Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.only(bottom: 12),
@@ -109,8 +107,6 @@ appBar: AppBar(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               itemCount: days.length,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
-              physics: const BouncingScrollPhysics(),
-              cacheExtent: 600,
               itemBuilder: (_, i) {
                 final d = days[i];
                 final isToday = d.year == today.year && d.month == today.month && d.day == today.day;
@@ -226,6 +222,8 @@ class _SplashPageState extends State<SplashPage> {
         MaterialPageRoute(builder: (_) => const MainShell()),
       );
     }();
+  }
+();
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -252,13 +250,9 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final List<Medicine> _meds = [];
-  bool _paused = false;
-
-  @override
+class _HomePageState{@override
   void initState() {
-    super.initState();
+super.initState();
     () async {
       await NotificationService.instance.init();
       await Future.delayed(const Duration(seconds: 2));
@@ -266,7 +260,8 @@ class _HomePageState extends State<HomePage> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainShell()),
       );
-    }();
+  }
+();
     _loadMeds().then((_) => _ensureSchedules());
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshPaused());
   }
@@ -621,14 +616,9 @@ class EditMedicinePage extends StatefulWidget {
   State<EditMedicinePage> createState() => _EditMedicinePageState();
 }
 
-class _EditMedicinePageState extends State<EditMedicinePage> {
-  late TextEditingController _nameCtrl;
-  TimeOfDay? _selectedTime;
-  bool _enabled = true;
-
-  @override
+class _EditMedicinePageState{@override
   void initState() {
-    super.initState();
+super.initState();
     () async {
       await NotificationService.instance.init();
       await Future.delayed(const Duration(seconds: 2));
@@ -636,7 +626,8 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainShell()),
       );
-    }();
+  }
+();
     _nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
     if (widget.existing != null) {
       _selectedTime = widget.existing!.time;
@@ -718,13 +709,9 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  bool _paused = false;
-  int _snooze = 10;
-
-  @override
+class _SettingsPageState{@override
   void initState() {
-    super.initState();
+super.initState();
     () async {
       await NotificationService.instance.init();
       await Future.delayed(const Duration(seconds: 2));
@@ -732,7 +719,8 @@ class _SettingsPageState extends State<SettingsPage> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainShell()),
       );
-    }();
+  }
+();
     _load();
   }
 
