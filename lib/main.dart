@@ -41,13 +41,16 @@ class Medicine {
   int hour;
   int minute;
   bool enabled;
+  // 1=Mon..7=Sun (ตาม Dart DateTime.weekday)
+  List<int> days;
   Medicine({
     required this.id,
     required this.name,
     required this.hour,
     required this.minute,
     this.enabled = true,
-  });
+    List<int>? days,
+  }) : days = days ?? [1,2,3,4,5,6,7];
 
   TimeOfDay get time => TimeOfDay(hour: hour, minute: minute);
 
@@ -57,6 +60,7 @@ class Medicine {
         'hour': hour,
         'minute': minute,
         'enabled': enabled,
+        'days': days,
       };
   static Medicine fromJson(Map<String, dynamic> j) => Medicine(
         id: j['id'],
@@ -64,6 +68,7 @@ class Medicine {
         hour: j['hour'],
         minute: j['minute'],
         enabled: j['enabled'] ?? true,
+        days: (j['days'] as List?)?.map((e) => e as int).toList() ?? [1,2,3,4,5,6,7],
       );
 }
 
@@ -97,23 +102,23 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     for (final m in _meds) {
+      await NotificationService.instance.cancelSeries(m.id);
       if (m.enabled) {
-        await NotificationService.instance.scheduleDaily(
-          id: m.id,
+        await NotificationService.instance.scheduleWeeklySeries(
+          baseId: m.id,
           title: 'ถึงเวลายา',
           body: 'อย่าลืมทาน: ${m.name}',
           hour: m.hour,
           minute: m.minute,
+          weekdays: m.days,
         );
-      } else {
-        await NotificationService.instance.cancel(m.id);
       }
     }
   }
 
   Future<void> _loadMeds() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList('meds_v2') ?? [];
+    final raw = prefs.getStringList('meds_v3_weekdays') ?? prefs.getStringList('meds_v2') ?? [];
     final items = raw.map((s) => Medicine.fromJson(jsonDecode(s))).toList();
     setState(() {
       _meds
@@ -125,13 +130,13 @@ class _HomePageState extends State<HomePage> {
   Future<void> _saveMeds() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = _meds.map((m) => jsonEncode(m.toJson())).toList();
-    await prefs.setStringList('meds_v2', raw);
+    await prefs.setStringList('meds_v3_weekdays', raw);
   }
 
   void _openSettings() async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
     await _refreshPaused();
-    await _ensureSchedules(); // ถ้าปิด pause ให้ตั้งกลับ
+    await _ensureSchedules();
     if (mounted) setState(() {});
   }
 
@@ -230,12 +235,13 @@ class _HomePageState extends State<HomePage> {
                   setState(() => _meds.add(result));
                   await _saveMeds();
                   if (result.enabled) {
-                    await NotificationService.instance.scheduleDaily(
-                      id: result.id,
+                    await NotificationService.instance.scheduleWeeklySeries(
+                      baseId: result.id,
                       title: 'ถึงเวลายา',
                       body: 'อย่าลืมทาน: ${result.name}',
                       hour: result.hour,
                       minute: result.minute,
+                      weekdays: result.days,
                     );
                   }
                   if (mounted) {
@@ -253,27 +259,18 @@ class _HomePageState extends State<HomePage> {
         child: _meds.isEmpty
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text('วันนี้', style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(width: 8),
-                      if (_paused)
-                        const Chip(
-                          label: Text('Paused'),
-                          backgroundColor: Colors.orangeAccent,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const _EmptyState(),
+                children: const [
+                  SizedBox(height: 8),
+                  Text('วันนี้', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  SizedBox(height: 12),
+                  _EmptyState(),
                 ],
               )
             : ListView.builder(
                 itemCount: _meds.length,
                 itemBuilder: (_, i) {
                   final m = _meds[i];
+                  final daysText = m.days.map((d) => _weekdayShort(d)).join(' ');
                   return Dismissible(
                     key: ValueKey(m.id),
                     background: Container(
@@ -292,7 +289,7 @@ class _HomePageState extends State<HomePage> {
                       final removed = m;
                       setState(() => _meds.removeAt(i));
                       await _saveMeds();
-                      await NotificationService.instance.cancel(removed.id);
+                      await NotificationService.instance.cancelSeries(removed.id);
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('ลบ ${removed.name} แล้ว'),
                         action: SnackBarAction(
@@ -301,12 +298,13 @@ class _HomePageState extends State<HomePage> {
                             setState(() => _meds.insert(i, removed));
                             await _saveMeds();
                             if (removed.enabled) {
-                              await NotificationService.instance.scheduleDaily(
-                                id: removed.id,
+                              await NotificationService.instance.scheduleWeeklySeries(
+                                baseId: removed.id,
                                 title: 'ถึงเวลายา',
                                 body: 'อย่าลืมทาน: ${removed.name}',
                                 hour: removed.hour,
                                 minute: removed.minute,
+                                weekdays: removed.days,
                               );
                             }
                           },
@@ -327,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                           child: const Icon(Icons.medication_liquid_rounded),
                         ),
                         title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        subtitle: Text(m.time.format(context)),
+                        subtitle: Text('${m.time.format(context)}  •  $daysText'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -338,16 +336,16 @@ class _HomePageState extends State<HomePage> {
                                   : (val) async {
                                       setState(() => m.enabled = val);
                                       await _saveMeds();
+                                      await NotificationService.instance.cancelSeries(m.id);
                                       if (val) {
-                                        await NotificationService.instance.scheduleDaily(
-                                          id: m.id,
+                                        await NotificationService.instance.scheduleWeeklySeries(
+                                          baseId: m.id,
                                           title: 'ถึงเวลายา',
                                           body: 'อย่าลืมทาน: ${m.name}',
                                           hour: m.hour,
                                           minute: m.minute,
+                                          weekdays: m.days,
                                         );
-                                      } else {
-                                        await NotificationService.instance.cancel(m.id);
                                       }
                                     },
                             ),
@@ -366,16 +364,18 @@ class _HomePageState extends State<HomePage> {
                                           m.hour = edited.hour;
                                           m.minute = edited.minute;
                                           m.enabled = edited.enabled;
+                                          m.days = edited.days;
                                         });
                                         await _saveMeds();
-                                        await NotificationService.instance.cancel(m.id);
+                                        await NotificationService.instance.cancelSeries(m.id);
                                         if (m.enabled) {
-                                          await NotificationService.instance.scheduleDaily(
-                                            id: m.id,
+                                          await NotificationService.instance.scheduleWeeklySeries(
+                                            baseId: m.id,
                                             title: 'ถึงเวลายา',
                                             body: 'อย่าลืมทาน: ${m.name}',
                                             hour: m.hour,
                                             minute: m.minute,
+                                            weekdays: m.days,
                                           );
                                         }
                                       }
@@ -392,7 +392,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String _weekdayShort(int w) {
+  static String _weekdayShort(int w) {
     const map = {1: 'จ.', 2: 'อ.', 3: 'พ.', 4: 'พฤ.', 5: 'ศ.', 6: 'ส.', 7: 'อา.'};
     return map[w] ?? '';
   }
@@ -428,6 +428,7 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
   late TextEditingController _nameCtrl;
   TimeOfDay? _selectedTime;
   bool _enabled = true;
+  final List<int> _days = [1,2,3,4,5,6,7];
 
   @override
   void initState() {
@@ -436,6 +437,9 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
     if (widget.existing != null) {
       _selectedTime = widget.existing!.time;
       _enabled = widget.existing!.enabled;
+      _days
+        ..clear()
+        ..addAll(widget.existing!.days);
     }
   }
 
@@ -475,6 +479,30 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
               ],
             ),
             const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: List.generate(7, (index) {
+                  final day = index + 1; // 1..7
+                  final label = const ['จ.','อ.','พ.','พฤ.','ศ.','ส.','อา.'][index];
+                  final selected = _days.contains(day);
+                  return FilterChip(
+                    label: Text(label),
+                    selected: selected,
+                    onSelected: (v) {
+                      setState(() {
+                        if (v) _days.add(day);
+                        else _days.remove(day);
+                        _days.sort();
+                      });
+                    },
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 8),
             SwitchListTile(
               value: _enabled,
               onChanged: (v) => setState(() => _enabled = v),
@@ -483,8 +511,8 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
             const Spacer(),
             FilledButton(
               onPressed: () {
-                if (_nameCtrl.text.trim().isEmpty || _selectedTime == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('กรอกข้อมูลให้ครบ')));
+                if (_nameCtrl.text.trim().isEmpty || _selectedTime == null || _days.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('กรอกข้อมูลให้ครบ และเลือกอย่างน้อย 1 วัน')));
                   return;
                 }
                 final t = _selectedTime!;
@@ -495,6 +523,7 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
                   hour: t.hour,
                   minute: t.minute,
                   enabled: _enabled,
+                  days: List<int>.from(_days),
                 ));
               },
               child: Text(isEdit ? 'บันทึกการแก้ไข' : 'เพิ่ม'),
@@ -549,16 +578,17 @@ class _SettingsPageState extends State<SettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('หยุดแจ้งเตือนทั้งหมดแล้ว')));
       }
     } else {
-      final raw = prefs.getStringList('meds_v2') ?? [];
+      final raw = prefs.getStringList('meds_v3_weekdays') ?? [];
       final meds = raw.map((s) => Medicine.fromJson(jsonDecode(s))).toList();
       for (final m in meds) {
         if (m.enabled) {
-          await NotificationService.instance.scheduleDaily(
-            id: m.id,
+          await NotificationService.instance.scheduleWeeklySeries(
+            baseId: m.id,
             title: 'ถึงเวลายา',
             body: 'อย่าลืมทาน: ${m.name}',
             hour: m.hour,
             minute: m.minute,
+            weekdays: m.days,
           );
         }
       }
@@ -704,7 +734,7 @@ class NotificationService {
         ?.createNotificationChannel(channel);
 
     await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>() 
         ?.requestNotificationsPermission();
   }
 
@@ -732,26 +762,46 @@ class NotificationService {
     await _plugin.show(9999, title, body, _details());
   }
 
-  Future<void> scheduleDaily({
-    required int id,
+  // สร้างซีรีส์แจ้งเตือนรายสัปดาห์ตามวันในสัปดาห์
+  Future<void> scheduleWeeklySeries({
+    required int baseId,
     required String title,
     required String body,
     required int hour,
     required int minute,
+    required List<int> weekdays, // 1..7
   }) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var at = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    if (at.isBefore(now)) at = at.add(const Duration(days: 1));
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      at,
-      _details(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    for (final w in weekdays) {
+      final id = _seriesId(baseId, w);
+      final now = tz.TZDateTime.now(tz.local);
+      var at = tz.TZDateTime(
+          tz.local, now.year, now.month, now.day, hour, minute);
+      // เลื่อนไปให้ตรงวัน w ที่จะถึง
+      while (at.weekday != w || at.isBefore(now)) {
+        at = at.add(const Duration(days: 1));
+      }
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        at,
+        _details(),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    }
+  }
+
+  int _seriesId(int base, int weekday) => base % 1000000 * 10 + weekday; // map เป็น id ไม่ชน
+
+  Future<void> cancelSeries(int baseId) async {
+    for (int w = 1; w <= 7; w++) {
+      await _plugin.cancel(_seriesId(baseId, w));
+    }
+    // เผื่อเคยตั้งแบบ daily มาก่อน
+    await _plugin.cancel(baseId);
   }
 
   Future<void> scheduleOneShot({
