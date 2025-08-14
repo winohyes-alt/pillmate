@@ -33,6 +33,55 @@ class PillMateApp extends StatelessWidget {
   }
 }
 
+
+class MainShell extends StatefulWidget {
+  const MainShell({super.key});
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  int _index = 0;
+
+  final _pages = const [
+    HomePage(),        // หน้าเดิม
+    _PlaceholderPage(title: 'ปฏิทิน (ยังไม่ทำ)'),
+    _PlaceholderPage(title: 'ยา (ยังไม่ทำ)'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(index: _index, children: _pages),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.check), label: 'งาน'),
+          NavigationDestination(icon: Icon(Icons.calendar_today), label: 'ปฏิทิน'),
+          NavigationDestination(icon: Icon(Icons.medication), label: 'ยา'),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlaceholderPage extends StatelessWidget {
+  final String title;
+  const _PlaceholderPage({required this.title});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF4AC3CF),
+        foregroundColor: Colors.white,
+        title: Text(title),
+      ),
+      body: const Center(child: Text('เร็ว ๆ นี้')),
+    );
+  }
+}
+
 class Medicine {
   final int id;
   String name;
@@ -86,13 +135,13 @@ class _SplashPageState extends State<SplashPage> {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const MainShell()),
       );
     }();
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const MainShell()),
         );
       }
     });
@@ -127,7 +176,7 @@ class _HomePageState extends State<HomePage> {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const MainShell()),
       );
     }();
     _loadMeds().then((_) => _ensureSchedules());
@@ -200,8 +249,25 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         title: const Text('PillMate', style: TextStyle(fontWeight: FontWeight.w900)),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(110),
-          child: Container(
+          preferredSize: const Size.fromHeight(170),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Banner ด้านบน (แก้น้อยสุด แค่ใส่ Container ไว้ให้ใช้งานต่อ)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(.85),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: const Text('แบนเนอร์', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+              
             alignment: Alignment.center,
             padding: const EdgeInsets.only(bottom: 12),
             child: SizedBox(
@@ -234,8 +300,10 @@ class _HomePageState extends State<HomePage> {
                               color: isToday ? const Color(0xFF198D98) : Colors.white,
                               fontWeight: FontWeight.w800,
                               fontSize: 18,
-                            )),
-                      ),
+                            )
+            ],
+          ),
+        ),
                     ],
                   );
                 },
@@ -478,7 +546,7 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const MainShell()),
       );
     }();
     _nameCtrl = TextEditingController(text: widget.existing?.name ?? '');
@@ -574,7 +642,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const MainShell()),
       );
     }();
     _load();
