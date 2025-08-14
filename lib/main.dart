@@ -52,31 +52,58 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _index, children: _pages),
-      bottomNavigationBar: NavigationBarTheme(
-          data: const NavigationBarThemeData(
-            height: 56,
-            labelTextStyle: MaterialStatePropertyAll(TextStyle(fontSize: 12)),
-            iconTheme: MaterialStatePropertyAll(IconThemeData(size: 20)),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(.08), blurRadius: 12, offset: const Offset(0, 6))],
+            ),
+            child: NavigationBarTheme(
+              data: const NavigationBarThemeData(
+                height: 56,
+                indicatorColor: Color(0xFF4AC3CF),
+                labelTextStyle: MaterialStatePropertyAll(TextStyle(fontSize: 12)),
+                iconTheme: MaterialStatePropertyAll(IconThemeData(size: 20)),
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              ),
+              child: NavigationBar(
+                backgroundColor: Colors.transparent,
+                indicatorColor: Colors.transparent,
+                selectedIndex: _index,
+                onDestinationSelected: (i) => setState(() => _index = i),
+                destinations: const [
+                  NavigationDestination(icon: Icon(Icons.check), label: 'งาน'),
+                  NavigationDestination(icon: Icons.calendar_today, label: 'ปฏิทิน'),
+                  NavigationDestination(icon: Icons.medication, label: 'ยา'),
+                ].map((d) => NavigationDestination(
+                  icon: Icon(d.icon, color: _index == _pages.indexOf(_pages.firstWhere((p) => p is HomePage)) ? Colors.white : Colors.grey),
+                  selectedIcon: Icon(d.icon, color: Colors.white),
+                  label: d.label,
+                )).toList(),
+              ),
+            ),
           ),
-          child: NavigationBar(
-            selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.check), label: 'งาน'),
-              NavigationDestination(icon: Icon(Icons.calendar_today), label: 'ปฏิทิน'),
-              NavigationDestination(icon: Icon(Icons.medication), label: 'ยา'),
-            ],
-          )),
+        ),
+      ),
     );
   }
 }
 
+
 class _PlaceholderPage extends StatelessWidget {
   final String title;
   const _PlaceholderPage({required this.title});
+
   @override
   Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final start = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 3));
+    final days = List.generate(7, (i) => start.add(Duration(days: i)));
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF4AC3CF),
@@ -110,12 +137,10 @@ class _PlaceholderPage extends StatelessWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: 7,
+                    itemCount: days.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (_, i) {
-                      final today = DateTime.now();
-                      final start = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 3));
-                      final d = start.add(Duration(days: i));
+                      final d = days[i];
                       final isToday = d.year == today.year && d.month == today.month && d.day == today.day;
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -325,67 +350,51 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         title: const Text('PillMate', style: TextStyle(fontWeight: FontWeight.w900)),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(170),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.85),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: const Text('แบนเนอร์', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ),
-              Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.only(bottom: 12),
-                child: SizedBox(
-                  height: 84,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: days.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (_, i) {
-                      final d = days[i];
-                      final isToday = d.year == today.year && d.month == today.month && d.day == today.day;
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(_weekdayShort(d.weekday), style: const TextStyle(color: Colors.white70)),
-                          const SizedBox(height: 6),
-                          Container(
-                            width: 56,
-                            height: 56,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: isToday ? Colors.white : Colors.white.withOpacity(.25),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: isToday ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)] : null,
-                            ),
-                            child: Text(
-                              '${d.day}',
-                              style: TextStyle(
-                                color: isToday ? const Color(0xFF198D98) : Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18,
-                              ),
-                            ),
+          preferredSize: const Size.fromHeight(110),
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.only(bottom: 12),
+            child: SizedBox(
+              height: 84,
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                cacheExtent: 600,
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: days.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (_, i) {
+                  final d = days[i];
+                  final isToday = d.year == today.year && d.month == today.month && d.day == today.day;
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_weekdayShort(d.weekday), style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: 56,
+                        height: 56,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isToday ? Colors.white : Colors.white.withOpacity(.25),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: isToday ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)] : null,
+                        ),
+                        child: Text(
+                          '${d.day}',
+                          style: TextStyle(
+                            color: isToday ? const Color(0xFF198D98) : Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
                           ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ],
+            ),
           ),
         ),
         actions: [
@@ -456,7 +465,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 8),
                   Text('วันนี้', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   SizedBox(height: 12),
-                  _EmptyState(),
+                  Expanded(child: _EmptyState()),
                 ],
               )
                   : ListView.builder(
@@ -609,17 +618,13 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState();
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.medication_rounded, size: 96, color: Colors.black.withOpacity(.15)),
-            const SizedBox(height: 12),
-            Text('ยังไม่มียา เพิ่มรายการด้วยปุ่มด้านล่างขวา', textAlign: TextAlign.center, style: const TextStyle(color: Colors.black87)),
-          ],
-        ),
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.medication_rounded, size: 96, color: Colors.black.withOpacity(.15)),
+        const SizedBox(height: 12),
+        const Text('ยังไม่มียา เพิ่มรายการด้วยปุ่มด้านล่างขวา', textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
+      ],
     );
   }
 }
