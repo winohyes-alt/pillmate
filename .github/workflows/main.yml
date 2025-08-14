@@ -1,4 +1,4 @@
-name: Build Flutter APK (Step 4.1 Settings)
+name: Build Flutter APK (Step 4.2 Weekdays)
 on:
   workflow_dispatch:
 
@@ -40,5 +40,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: pillmate-step41-apk
+          name: pillmate-step42-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
