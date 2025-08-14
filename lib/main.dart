@@ -52,6 +52,7 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _index, children: _pages),
+      // เมนูล่าง: โค้งมน เงา และขนาดกระทัดรัด
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -76,14 +77,22 @@ class _MainShellState extends State<MainShell> {
                 selectedIndex: _index,
                 onDestinationSelected: (i) => setState(() => _index = i),
                 destinations: const [
-                  NavigationDestination(icon: Icon(Icons.check), label: 'งาน'),
-                  NavigationDestination(icon: Icons.calendar_today, label: 'ปฏิทิน'),
-                  NavigationDestination(icon: Icons.medication, label: 'ยา'),
-                ].map((d) => NavigationDestination(
-                  icon: Icon(d.icon, color: _index == _pages.indexOf(_pages.firstWhere((p) => p is HomePage)) ? Colors.white : Colors.grey),
-                  selectedIcon: Icon(d.icon, color: Colors.white),
-                  label: d.label,
-                )).toList(),
+                  NavigationDestination(
+                    icon: Icon(Icons.check_outlined),
+                    selectedIcon: Icon(Icons.check),
+                    label: 'งาน',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.calendar_today_outlined),
+                    selectedIcon: Icon(Icons.calendar_today),
+                    label: 'ปฏิทิน',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.medication_outlined),
+                    selectedIcon: Icon(Icons.medication),
+                    label: 'ยา',
+                  ),
+                ],
               ),
             ),
           ),
@@ -92,7 +101,6 @@ class _MainShellState extends State<MainShell> {
     );
   }
 }
-
 
 class _PlaceholderPage extends StatelessWidget {
   final String title;
@@ -116,6 +124,7 @@ class _PlaceholderPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Banner ของหน้า placeholder (เว้นไว้ด้านบนได้ตามเดิม)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                 child: Container(
@@ -129,6 +138,7 @@ class _PlaceholderPage extends StatelessWidget {
                   child: const Text('แบนเนอร์', style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
               ),
+              // แถบ 7 วัน
               Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.only(bottom: 12),
@@ -413,46 +423,46 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: _paused
           ? FloatingActionButton.extended(
-        onPressed: () async {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('pause_all', false);
-          await _ensureSchedules();
-          setState(() => _paused = false);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('เปิดแจ้งเตือนทั้งหมดแล้ว')));
-          }
-        },
-        icon: const Icon(Icons.play_arrow),
-        label: const Text('Resume all'),
-        backgroundColor: Colors.orange,
-      )
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('pause_all', false);
+                await _ensureSchedules();
+                setState(() => _paused = false);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('เปิดแจ้งเตือนทั้งหมดแล้ว')));
+                }
+              },
+              icon: const Icon(Icons.play_arrow),
+              label: const Text('Resume all'),
+              backgroundColor: Colors.orange,
+            )
           : FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.of(context).push<Medicine>(
-            MaterialPageRoute(builder: (_) => const EditMedicinePage()),
-          );
-          if (result != null) {
-            setState(() => _meds.add(result));
-            await _saveMeds();
-            if (result.enabled) {
-              await NotificationService.instance.scheduleDaily(
-                id: result.id,
-                title: 'ถึงเวลายา',
-                body: 'อย่าลืมทาน: ${result.name}',
-                hour: result.hour,
-                minute: result.minute,
-              );
-            }
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('เพิ่ม ${result.name} ${result.time.format(context)}')),
-              );
-            }
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('เพิ่มยา'),
-      ),
+              onPressed: () async {
+                final result = await Navigator.of(context).push<Medicine>(
+                  MaterialPageRoute(builder: (_) => const EditMedicinePage()),
+                );
+                if (result != null) {
+                  setState(() => _meds.add(result));
+                  await _saveMeds();
+                  if (result.enabled) {
+                    await NotificationService.instance.scheduleDaily(
+                      id: result.id,
+                      title: 'ถึงเวลายา',
+                      body: 'อย่าลืมทาน: ${result.name}',
+                      hour: result.hour,
+                      minute: result.minute,
+                    );
+                  }
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('เพิ่ม ${result.name} ${result.time.format(context)}')),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('เพิ่มยา'),
+            ),
       body: Column(
         children: [
           Expanded(
@@ -460,134 +470,135 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
               child: _meds.isEmpty
                   ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 8),
-                  Text('วันนี้', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 12),
-                  Expanded(child: _EmptyState()),
-                ],
-              )
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        SizedBox(height: 8),
+                        Text('วันนี้', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        SizedBox(height: 12),
+                        Expanded(child: _EmptyState()),
+                      ],
+                    )
                   : ListView.builder(
-                itemCount: _meds.length,
-                itemBuilder: (_, i) {
-                  final m = _meds[i];
-                  return Dismissible(
-                    key: ValueKey(m.id),
-                    background: Container(
-                      decoration: BoxDecoration(color: Colors.red.shade400, borderRadius: BorderRadius.circular(16)),
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 16),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    secondaryBackground: Container(
-                      decoration: BoxDecoration(color: Colors.red.shade400, borderRadius: BorderRadius.circular(16)),
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 16),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    onDismissed: (_) async {
-                      final removed = m;
-                      setState(() => _meds.removeAt(i));
-                      await _saveMeds();
-                      await NotificationService.instance.cancelSeries(removed.id);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('ลบ ${removed.name} แล้ว'),
-                        action: SnackBarAction(
-                          label: 'ยกเลิก',
-                          onPressed: () async {
-                            setState(() => _meds.insert(i, removed));
+                      itemCount: _meds.length,
+                      itemBuilder: (_, i) {
+                        final m = _meds[i];
+                        return Dismissible(
+                          key: ValueKey(m.id),
+                          background: Container(
+                            decoration: BoxDecoration(color: Colors.red.shade400, borderRadius: BorderRadius.circular(16)),
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 16),
+                            child: const Icon(Icons.delete, color: Colors.white),
+                          ),
+                          secondaryBackground: Container(
+                            decoration: BoxDecoration(color: Colors.red.shade400, borderRadius: BorderRadius.circular(16)),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 16),
+                            child: const Icon(Icons.delete, color: Colors.white),
+                          ),
+                          onDismissed: (_) async {
+                            final removed = m;
+                            setState(() => _meds.removeAt(i));
                             await _saveMeds();
-                            if (removed.enabled) {
-                              await NotificationService.instance.scheduleDaily(
-                                id: removed.id,
-                                title: 'ถึงเวลายา',
-                                body: 'อย่าลืมทาน: ${removed.name}',
-                                hour: removed.hour,
-                                minute: removed.minute,
-                              );
-                            }
-                          },
-                        ),
-                      ));
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(.06), blurRadius: 8, offset: const Offset(0, 4))],
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF4AC3CF).withOpacity(.15),
-                          foregroundColor: const Color(0xFF198D98),
-                          child: const Icon(Icons.medication_liquid_rounded),
-                        ),
-                        title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                        subtitle: Text('${m.time.format(context)} • ทุกวัน'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Switch(
-                              value: m.enabled && !_paused,
-                              onChanged: _paused
-                                  ? null
-                                  : (val) async {
-                                setState(() => m.enabled = val);
-                                await _saveMeds();
-                                await NotificationService.instance.cancelSeries(m.id);
-                                if (val) {
-                                  await NotificationService.instance.scheduleDaily(
-                                    id: m.id,
-                                    title: 'ถึงเวลายา',
-                                    body: 'อย่าลืมทาน: ${m.name}',
-                                    hour: m.hour,
-                                    minute: m.minute,
-                                  );
-                                }
-                              },
-                            ),
-                            IconButton(
-                              tooltip: 'แก้ไข',
-                              icon: const Icon(Icons.edit),
-                              onPressed: _paused
-                                  ? null
-                                  : () async {
-                                final edited = await Navigator.of(context).push<Medicine>(
-                                  MaterialPageRoute(builder: (_) => EditMedicinePage(existing: m)),
-                                );
-                                if (edited != null) {
-                                  setState(() {
-                                    m.name = edited.name;
-                                    m.hour = edited.hour;
-                                    m.minute = edited.minute;
-                                    m.enabled = edited.enabled;
-                                    m.days = edited.days;
-                                  });
+                            await NotificationService.instance.cancelSeries(removed.id);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('ลบ ${removed.name} แล้ว'),
+                              action: SnackBarAction(
+                                label: 'ยกเลิก',
+                                onPressed: () async {
+                                  setState(() => _meds.insert(i, removed));
                                   await _saveMeds();
-                                  await NotificationService.instance.cancelSeries(m.id);
-                                  if (m.enabled) {
+                                  if (removed.enabled) {
                                     await NotificationService.instance.scheduleDaily(
-                                      id: m.id,
+                                      id: removed.id,
                                       title: 'ถึงเวลายา',
-                                      body: 'อย่าลืมทาน: ${m.name}',
-                                      hour: m.hour,
-                                      minute: m.minute,
+                                      body: 'อย่าลืมทาน: ${removed.name}',
+                                      hour: removed.hour,
+                                      minute: removed.minute,
                                     );
                                   }
-                                }
-                              },
+                                },
+                              ),
+                            ));
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(.06), blurRadius: 8, offset: const Offset(0, 4))],
                             ),
-                          ],
-                        ),
-                      ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFF4AC3CF).withOpacity(.15),
+                                foregroundColor: const Color(0xFF198D98),
+                                child: const Icon(Icons.medication_liquid_rounded),
+                              ),
+                              title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                              subtitle: Text('${m.time.format(context)} • ทุกวัน'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Switch(
+                                    value: m.enabled && !_paused,
+                                    onChanged: _paused
+                                        ? null
+                                        : (val) async {
+                                            setState(() => m.enabled = val);
+                                            await _saveMeds();
+                                            await NotificationService.instance.cancelSeries(m.id);
+                                            if (val) {
+                                              await NotificationService.instance.scheduleDaily(
+                                                id: m.id,
+                                                title: 'ถึงเวลายา',
+                                                body: 'อย่าลืมทาน: ${m.name}',
+                                                hour: m.hour,
+                                                minute: m.minute,
+                                              );
+                                            }
+                                          },
+                                  ),
+                                  IconButton(
+                                    tooltip: 'แก้ไข',
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: _paused
+                                        ? null
+                                        : () async {
+                                            final edited = await Navigator.of(context).push<Medicine>(
+                                              MaterialPageRoute(builder: (_) => EditMedicinePage(existing: m)),
+                                            );
+                                            if (edited != null) {
+                                              setState(() {
+                                                m.name = edited.name;
+                                                m.hour = edited.hour;
+                                                m.minute = edited.minute;
+                                                m.enabled = edited.enabled;
+                                                m.days = edited.days;
+                                              });
+                                              await _saveMeds();
+                                              await NotificationService.instance.cancelSeries(m.id);
+                                              if (m.enabled) {
+                                                await NotificationService.instance.scheduleDaily(
+                                                  id: m.id,
+                                                  title: 'ถึงเวลายา',
+                                                  body: 'อย่าลืมทาน: ${m.name}',
+                                                  hour: m.hour,
+                                                  minute: m.minute,
+                                                );
+                                              }
+                                            }
+                                          },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ),
+          // แบนเนอร์ย้ายมาอยู่เหนือเมนูล่าง
           SafeArea(
             top: false,
             minimum: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -618,13 +629,16 @@ class _EmptyState extends StatelessWidget {
   const _EmptyState();
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.medication_rounded, size: 96, color: Colors.black.withOpacity(.15)),
-        const SizedBox(height: 12),
-        const Text('ยังไม่มียา เพิ่มรายการด้วยปุ่มด้านล่างขวา', textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
-      ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.medication_rounded, size: 96, color: Colors.black.withOpacity(.15)),
+          const SizedBox(height: 12),
+          const Text('ยังไม่มียา เพิ่มรายการด้วยปุ่มด้านล่างขวา',
+              textAlign: TextAlign.center, style: TextStyle(color: Colors.black87)),
+        ],
+      ),
     );
   }
 }
@@ -649,6 +663,12 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
       _selectedTime = widget.existing!.time;
       _enabled = widget.existing!.enabled;
     }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -707,7 +727,7 @@ class _EditMedicinePageState extends State<EditMedicinePage> {
                   hour: t.hour,
                   minute: t.minute,
                   enabled: _enabled,
-                  days: const [1, 2, 3, 4, 5, 6, 7],
+                  days: const [1, 2, 3, 4, 5, 6, 7], // คงรูป schema เดิม
                 ));
               },
               child: Text(isEdit ? 'บันทึกการแก้ไข' : 'เพิ่ม'),
