@@ -72,8 +72,96 @@ class _PlaceholderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF4AC3CF),
+      
+appBar: AppBar(
+  backgroundColor: const Color(0xFF4AC3CF),
+  foregroundColor: Colors.white,
+  elevation: 0,
+  centerTitle: true,
+  title: const Text('PillMate', style: TextStyle(fontWeight: FontWeight.w900)),
+  bottom: PreferredSize(
+    preferredSize: const Size.fromHeight(170),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ===== Banner ด้านบน =====
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(.85),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: const Text('แบนเนอร์', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ),
+        // ===== แถบปฏิทิน 7 วันเดิม =====
+        Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SizedBox(
+            height: 84,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: days.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              physics: const BouncingScrollPhysics(),
+              cacheExtent: 600,
+              itemBuilder: (_, i) {
+                final d = days[i];
+                final isToday = d.year == today.year && d.month == today.month && d.day == today.day;
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_weekdayShort(d.weekday), style: const TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 56,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isToday ? Colors.white : Colors.white.withOpacity(.25),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: isToday ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)] : null,
+                      ),
+                      child: Text(
+                        '${d.day}',
+                        style: TextStyle(
+                          color: isToday ? const Color(0xFF198D98) : Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+  actions: [
+    IconButton(
+      tooltip: 'Settings',
+      icon: const Icon(Icons.settings, color: Colors.white),
+      onPressed: _openSettings,
+    ),
+    IconButton(
+      tooltip: 'ทดสอบเด้งทันที',
+      icon: const Icon(Icons.notifications_active_outlined, color: Colors.white),
+      onPressed: () => NotificationService.instance.showNow('ทดสอบแจ้งเตือน', 'แบบเด้งทันที'),
+    ),
+    const SizedBox(width: 6),
+  ],
+),
+
         foregroundColor: Colors.white,
         title: Text(title),
       ),
