@@ -1,7 +1,7 @@
 name: pillmate
-description: PillMate - Step 4.1 (Settings: pause all, default snooze, quick links)
+description: PillMate - Step 4.2 (Weekday selection per medicine + Settings keep)
 publish_to: "none"
-version: 0.4.1+1
+version: 0.4.2+1
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
