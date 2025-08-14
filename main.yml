@@ -1,0 +1,44 @@
+name: Build Flutter APK (Step 4.1 Settings)
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+
+      - name: Create Android project
+        run: flutter create --platforms=android .
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Patch Android Manifest (permissions + portrait + exact alarm + receivers)
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          sed -i '0,/<manifest/s//<manifest xmlns:tools="http:\/\/schemas.android.com\/tools"/' $MANIFEST
+          sed -i 's#</manifest>#  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>\n  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>\n</manifest>#' $MANIFEST
+          sed -i 's#<activity#<activity android:screenOrientation="portrait"#' $MANIFEST
+          sed -i 's#</application>#  <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver" android:exported="false">\n    <intent-filter>\n      <action android:name="android.intent.action.BOOT_COMPLETED"/>\n      <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>\n    </intent-filter>\n  </receiver>\n  <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" android:exported="false" />\n</application>#' $MANIFEST
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pillmate-step41-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
