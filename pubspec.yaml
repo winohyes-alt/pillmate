@@ -1,0 +1,24 @@
+name: pillmate
+description: PillMate - Step 4.1 (Settings: pause all, default snooze, quick links)
+publish_to: "none"
+version: 0.4.1+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_local_notifications: ^17.1.2
+  timezone: ^0.9.4
+  shared_preferences: ^2.3.2
+  android_intent_plus: ^5.0.2
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
