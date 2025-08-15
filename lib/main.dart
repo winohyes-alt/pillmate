@@ -52,7 +52,8 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _index, children: _pages),
-      // เมนูล่าง: โค้งมน เงา และขนาดกระทัดรัด
+
+      // ===== เมนูแบบไอคอนบน/ข้อความล่าง สไตล์ภาพตัวอย่าง =====
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -60,36 +61,46 @@ class _MainShellState extends State<MainShell> {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(.08), blurRadius: 12, offset: const Offset(0, 6))],
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: NavigationBarTheme(
-              data: const NavigationBarThemeData(
-                height: 56,
-                indicatorColor: Color(0xFF4AC3CF),
-                labelTextStyle: MaterialStatePropertyAll(TextStyle(fontSize: 12)),
-                iconTheme: MaterialStatePropertyAll(IconThemeData(size: 20)),
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              ),
-              child: NavigationBar(
-                backgroundColor: Colors.transparent,
-                indicatorColor: Colors.transparent,
-                selectedIndex: _index,
-                onDestinationSelected: (i) => setState(() => _index = i),
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.check_outlined),
-                    selectedIcon: Icon(Icons.check),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.white,
+                elevation: 0,
+
+                currentIndex: _index,
+                onTap: (i) => setState(() => _index = i),
+
+                // ไอคอนเล็กลง + ฟอนต์เล็กลง แบบในภาพ
+                iconSize: 22,
+                selectedFontSize: 12,
+                unselectedFontSize: 12,
+                selectedItemColor: const Color(0xFF198D98),
+                unselectedItemColor: Colors.grey,
+
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.check),
                     label: 'งาน',
                   ),
-                  NavigationDestination(
-                    icon: Icon(Icons.calendar_today_outlined),
-                    selectedIcon: Icon(Icons.calendar_today),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.calendar_today),
                     label: 'ปฏิทิน',
                   ),
-                  NavigationDestination(
-                    icon: Icon(Icons.medication_outlined),
-                    selectedIcon: Icon(Icons.medication),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.medication),
                     label: 'ยา',
                   ),
                 ],
@@ -101,6 +112,7 @@ class _MainShellState extends State<MainShell> {
     );
   }
 }
+
 
 class _PlaceholderPage extends StatelessWidget {
   final String title;
